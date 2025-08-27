@@ -19,3 +19,30 @@ HAVING
 ORDER BY
 	1,2,4 DESC,3;
 	
+
+-- using sub-query: get the average number of orders per customer per country --
+SELECT ship_country, AVG(num_orders) FROM
+	(SELECT customer_id, ship_country, COUNT(*) AS num_orders
+	FROM orders
+	GROUP BY 1,2) sub
+GROUP BY 1;
+
+
+
+-- using CTE: get the average number of orders this year ('98) per customer per country --
+WITH cte_orders AS (
+	SELECT customer_id, ship_country, EXTRACT(YEAR FROM shipped_date) AS shipped_year, COUNT(*) AS num_orders
+	FROM orders
+	GROUP BY 1,2,3),
+	
+	cte_customers AS (
+	SELECT customer_id, company_name
+	FROM customers)
+
+
+SELECT ship_country, shipped_year, AVG(num_orders)
+FROM cte_orders
+JOIN cte_customers USING (customer_id)
+WHERE shipped_year = 1998
+GROUP BY 1, 2
+ORDER BY 3 DESC, 1;
